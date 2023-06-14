@@ -102,7 +102,6 @@ class STSEval(object):
 
             # consider all sentences (from footnote 3)
             unif = _lunif(torch.cat(all_enc1 + all_enc2)).item()
-            logging.info(f'align {align}\t\t uniform {unif}')
 
             all_sys_scores.extend(sys_scores)
             all_gs_scores.extend(gs_scores)
@@ -112,7 +111,7 @@ class STSEval(object):
             logging.debug('%s : pearson = %.4f, spearman = %.4f' %
                           (dataset, results[dataset]['pearson'][0],
                            results[dataset]['spearman'][0]))
-
+            # logging.info(f'align {align}\t\t uniform {unif}')
         weights = [results[dset]['nsamples'] for dset in results.keys()]
         list_prs = np.array([results[dset]['pearson'][0] for
                             dset in results.keys()])

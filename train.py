@@ -92,6 +92,12 @@ class ModelArguments:
             "help": "Temperature for softmax."
         }
     )
+    m: float = field(
+        default=0.3,
+        metadata={
+            "help": "hardness hyperparameter."
+        }
+    )
     pooler_type: str = field(
         default="cls",
         metadata={
