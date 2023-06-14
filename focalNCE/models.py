@@ -107,23 +107,6 @@ def cl_init(cls, config):
     cls.init_weights()
 
 
-def circle_cos(logits, s, m):
-    mask = torch.eye(logits.shape[0], dtype=bool)
-    sp, sn = logits[mask], logits[~mask]
-    an = torch.clamp_min(sn.detach() + 0.3, min=0.)
-    ap = torch.clamp_min(- sp.detach() + 1 + m, min=0.)
-
-    # topk = sn > sp.repeat_interleave(sp.size(0) - 1) - 0.2
-    # topk = torch.clamp_min(sn.detach() - (sp.detach().repeat_interleave(sp.size(0) - 1) - 0.2), min=0)
-    topk = sn < sp.detach().repeat_interleave(sp.size(0) - 1) + 0.1
-
-    soft_plus = nn.Softplus()
-    logit_p = - sp * s
-    logit_n = an * (sn * topk - 0.3) * s
-    loss = soft_plus(torch.logsumexp(logit_n, dim=0) + torch.logsumexp(logit_p, dim=0))
-    return loss
-
-
 def sp_logits(logits, s, m, y):
     mask = F.one_hot(y)
     alpha_p = logits * mask
@@ -200,8 +183,6 @@ def cl_forward(cls,
 
     # Separate representation
     z1, z2 = pooler_output[:,0], pooler_output[:,1]
-    # k1, k2 = key[:,0], key[:,1]
-    # q1, q2 = query[:,0], query[:,1]
 
     # Gather all embeddings if using distributed training
     if dist.is_initialized() and cls.training:
@@ -211,8 +192,7 @@ def cl_forward(cls,
     labels = torch.arange(cos_sim.size(0)).long().to(cls.device)
     loss_fct = nn.CrossEntropyLoss()
 
-    # convert to circle loss
-    # loss = circle_cos(cos_sim, 20, 0.3)
+    
     cos_sim = sp_logits(cos_sim, 20, 0.3, labels)
     loss = loss_fct(cos_sim, labels)
 
