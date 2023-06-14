@@ -323,17 +323,13 @@ class CLTrainer(Trainer):
         # Mixed precision training with apex (torch < 1.6)
         if self.use_apex:
             model, self.optimizer = amp.initialize(model, self.optimizer, opt_level=self.args.fp16_opt_level)
-
         # Multi-gpu training (should be after apex fp16 initialization)
         if self.args.n_gpu > 1:
             model = torch.nn.DataParallel(model)
-            print(1)
         # Distributed training (should be after apex fp16 initialization)
         if self.sharded_dpp:
-            print(2)
             model = ShardedDDP(model, self.optimizer)
         elif self.args.local_rank != -1:
-            print(3)
             model = torch.nn.parallel.DistributedDataParallel(
                 model,
                 device_ids=[self.args.local_rank],

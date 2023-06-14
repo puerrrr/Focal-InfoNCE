@@ -25,14 +25,10 @@ class MLPLayer(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.key_layer = nn.Linear(config.hidden_size, config.hidden_size)
-        # self.query_layer = nn.Linear(config.hidden_size, config.hidden_size)
-        # self.value_layer = nn.Linear(config.hidden_size, config.hidden_size)
         self.activation = nn.Tanh()
 
     def forward(self, features, **kwargs):
         key = self.activation(self.key_layer(features))
-        # query = self.activation(self.query_layer(features))
-        # value = self.activation(self.value_layer(features))
         return key
 
 
@@ -107,11 +103,11 @@ def cl_init(cls, config):
     cls.init_weights()
 
 
-def sp_logits(logits, s, m, y):
+def sp_logits(logits, t, m, y):
     mask = F.one_hot(y)
     alpha_p = logits * mask
     alpha_n = (logits + m) * (1 - mask)
-    logits = s * (alpha_p * logits + alpha_n * logits)
+    logits = (alpha_p * logits + alpha_n * logits) / t
     return logits
 
 
@@ -192,8 +188,7 @@ def cl_forward(cls,
     labels = torch.arange(cos_sim.size(0)).long().to(cls.device)
     loss_fct = nn.CrossEntropyLoss()
 
-    
-    cos_sim = sp_logits(cos_sim, 20, 0.3, labels)
+    cos_sim = sp_logits(cos_sim, cls.model_args.temp, cls.model_args.m, labels)
     loss = loss_fct(cos_sim, labels)
 
     # Calculate loss for MLM
