@@ -5,24 +5,19 @@ Code for our paper "Improving Contrastive Learning of Sentence Embeddings with F
 
 ## Model List
 
-Our released models are listed as following. You can import these models by using the `simcse` package or using [HuggingFace's Transformers](https://github.com/huggingface/transformers). 
+Our released models are listed as following. You can import these models by using the [HuggingFace's Transformers](https://github.com/huggingface/transformers). 
 |              Model              | Avg. STS |
 |:-------------------------------|:--------:|
 |  [princeton-nlp/unsup-simcse-bert-base-uncased](https://huggingface.co/princeton-nlp/unsup-simcse-bert-base-uncased) |   76.25 |
 | [princeton-nlp/unsup-simcse-bert-large-uncased](https://huggingface.co/princeton-nlp/unsup-simcse-bert-large-uncased) |   78.41  |
 |    [princeton-nlp/unsup-simcse-roberta-base](https://huggingface.co/princeton-nlp/unsup-simcse-roberta-base)    |   76.57  |
 |    [princeton-nlp/unsup-simcse-roberta-large](https://huggingface.co/princeton-nlp/unsup-simcse-roberta-large)   |   78.90  |
-|   [princeton-nlp/sup-simcse-bert-base-uncased](https://huggingface.co/princeton-nlp/sup-simcse-bert-base-uncased)  |   81.57  |
-|  [princeton-nlp/sup-simcse-bert-large-uncased](https://huggingface.co/princeton-nlp/sup-simcse-bert-large-uncased)  |   82.21  |
-|     [princeton-nlp/sup-simcse-roberta-base](https://huggingface.co/princeton-nlp/sup-simcse-roberta-base)     |   82.52  |
-|     [princeton-nlp/sup-simcse-roberta-large](https://huggingface.co/princeton-nlp/sup-simcse-roberta-large)    |   83.76  |
 
-Note that the results are slightly better than what we have reported in the current version of the paper after adopting a new set of hyperparameters (for hyperparamters, see the [training](#training) section).
 
 
 ## Training
 
-Our training code is base on the SimCSE
+Our training code is mainly based on [unsupervised-SimCSE](https://github.com/princeton-nlp/SimCSE).
 
 ### Requirements
 
@@ -57,7 +52,7 @@ bash download_dataset.sh
 Then come back to the root directory, you can evaluate any `transformers`-based pre-trained models using our evaluation code. For example,
 ```bash
 python evaluation.py \
-    --model_name_or_path result\my-unsup-simcse-robert-base-focal \
+    --model_name_or_path result\my-unsup-simcse-bert-base-uncased-focal \
     --pooler cls \
     --task_set sts \
     --mode test
@@ -68,15 +63,14 @@ which is expected to output the results in a tabular format:
 +-------+-------+-------+-------+-------+--------------+-----------------+-------+
 | STS12 | STS13 | STS14 | STS15 | STS16 | STSBenchmark | SICKRelatedness |  Avg. |
 +-------+-------+-------+-------+-------+--------------+-----------------+-------+
-| 70.68 | 82.22 | 74.60 | 82.60 | 81.69 |    81.72     |      69.52      | 77.58 |
+| 68.58 | 83.29 | 75.20 | 82.54 | 79.62 |    79.31     |      72.72      | 77.32 |
 +-------+-------+-------+-------+-------+--------------+-----------------+-------+
 ```
 
 Arguments for the evaluation script are as follows,
 
-* `--model_name_or_path`: The name or path of a `transformers`-based pre-trained checkpoint. You can directly use the models in the above table, e.g., `princeton-nlp/sup-simcse-bert-base-uncased`.
+* `--model_name_or_path`: The name or path of a `transformers`-based pre-trained checkpoint. You can directly use the models in the above table.
 * `--pooler`: Pooling method. Now we support
-    * `cls` (default): Use the representation of `[CLS]` token. A linear+activation layer is applied after the representation (it's in the standard BERT implementation). If you use **supervised SimCSE**, you should use this option.
     * `cls_before_pooler`: Use the representation of `[CLS]` token without the extra linear+activation. If you use **unsupervised SimCSE**, you should take this option.
     * `avg`: Average embeddings of the last layer. If you use checkpoints of SBERT/SRoBERTa ([paper](https://arxiv.org/abs/1908.10084)), you should use this option.
     * `avg_top2`: Average embeddings of the last two layers.
@@ -99,4 +93,21 @@ Arguments for the evaluation script are as follows,
 For unsupervised SimCSE, we sample 1 million sentences from English Wikipedia; for supervised SimCSE, we use the SNLI and MNLI datasets. You can run `data/download_wiki.sh` and `data/download_nli.sh` to download the two datasets.
 
 **Training scripts**
+We provide example training scripts for both unsupervised and supervised SimCSE. We explain the arguments in following:
+* `--train_file`: Training file path. We support "txt" files (one line for one sentence) and "csv" files (2-column: pair data with no hard negative; 3-column: pair data with one corresponding hard negative instance). You can use our provided Wikipedia or NLI data, or you can use your own data with the same format.
+* `--model_name_or_path`: Pre-trained checkpoints to start with. For now we support BERT-based models (`bert-base-uncased`, `bert-large-uncased`, etc.) and RoBERTa-based models (`RoBERTa-base`, `RoBERTa-large`, etc.).
+* `--temp`: Temperature for the contrastive loss.
+* `--pooler_type`: Pooling method. It's the same as the `--pooler_type` in the [evaluation part](#evaluation).
+* `--mlp_only_train`: We have found that for unsupervised SimCSE, it works better to train the model with MLP layer but test the model without it. You should use this argument when training unsupervised SimCSE models.
+* `--do_mlm`: Whether to use the MLM auxiliary objective. If True:
+  * `--mlm_weight`: Weight for the MLM objective.
+  * `--mlm_probability`: Masking rate for the MLM objective.
 
+All the other arguments are standard Huggingface's `transformers` training arguments. Some of the often-used arguments are: `--output_dir`, `--learning_rate`, `--per_device_train_batch_size`. In our example scripts, we also set to evaluate the model on the STS-B development set (need to download the dataset following the [evaluation](#evaluation) section) and save the best checkpoint.
+
+For results in the paper, we use Nvidia 3090 GPUs with CUDA 11. Using different types of devices or different versions of CUDA/other softwares may lead to slightly different performance.
+
+
+**Convert models**
+
+Our saved checkpoints are slightly different from Huggingface's pre-trained checkpoints. Run `python simcse_to_huggingface.py --path {PATH_TO_CHECKPOINT_FOLDER}` to convert it. After that, you can evaluate it by our [evaluation](#evaluation) code or directly use it [out of the box](#use-our-models-out-of-the-box).
