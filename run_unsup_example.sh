@@ -1,6 +1,4 @@
 #!/bin/bash
-
-
 python train.py \
     --model_name_or_path roberta-base \
     --train_file data/wiki1m_for_simcse.txt \
