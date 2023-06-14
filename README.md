@@ -8,10 +8,10 @@ Code for our paper "Improving Contrastive Learning of Sentence Embeddings with F
 Our released models are listed as following. You can import these models by using the [HuggingFace's Transformers](https://github.com/huggingface/transformers). 
 |              Model              | Avg. STS |
 |:-------------------------------|:--------:|
-|  [princeton-nlp/unsup-simcse-bert-base-uncased](https://huggingface.co/princeton-nlp/unsup-simcse-bert-base-uncased) |   76.25 |
-| [princeton-nlp/unsup-simcse-bert-large-uncased](https://huggingface.co/princeton-nlp/unsup-simcse-bert-large-uncased) |   78.41  |
-|    [princeton-nlp/unsup-simcse-roberta-base](https://huggingface.co/princeton-nlp/unsup-simcse-roberta-base)    |   76.57  |
-|    [princeton-nlp/unsup-simcse-roberta-large](https://huggingface.co/princeton-nlp/unsup-simcse-roberta-large)   |   78.90  |
+|  [unsup-simcse-bert-base-uncased](https://huggingface.co/Stevenhpy/unsup-simcse-bert-base-uncased-focal) |   77.32 |
+| [unsup-simcse-bert-large-uncased](https://huggingface.co/Stevenhpy/unsup-simcse-bert-large-uncased-focal) |   78.72  |
+|    [unsup-simcse-roberta-base](https://huggingface.co/Stevenhpy/unsup-simcse-roberta-base-focal)    |   77.58  |
+|    [unsup-simcse-roberta-large](https://huggingface.co/Stevenhpy/unsup-simcse-roberta-large-focal)   |   78.74  |
 
 
 
